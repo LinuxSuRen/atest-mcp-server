@@ -1,0 +1,40 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    id: atest-store-mcp
+    binary: atest-store-mcp
+    goos:
+      - linux
+      - windows
+      - darwin
+    ignore:
+      - goarch: 386
+    ldflags:
+      - -w
+      - -s
+      - -X github.com/linuxsuren/api-testing/pkg/version.version={{.Version}} -X github.com/linuxsuren/api-testing/pkg/version.commit={{.Commit}} -X github.com/linuxsuren/api-testing/pkg/version.date={{.Date}}
+archives:
+  - name_template: "{{ .Binary }}-{{ .Os }}-{{ .Arch }}"
+    builds:
+      - atest-store-mcp
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

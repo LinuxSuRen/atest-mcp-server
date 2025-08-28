@@ -3,12 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/linuxsuren/api-testing/docs"
 	"github.com/linuxsuren/api-testing/pkg/mock"
 	"github.com/linuxsuren/atest-mcp-server/pkg"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
-	"net/http"
 )
 
 type serverOption struct {
@@ -105,11 +106,19 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 
 	if o.runnerAddress != "" {
 		runner := pkg.NewRunner(o.runnerAddress)
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "run",
+			Description: "Run a test case",
+		}, runner.Run)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-suites",
+			Description: "Get all test suites",
+		}, runner.GetSuites)
 		mcp.AddTool(server, &mcp.Tool{
 			Name:        "create-test-suite",
 			Description: "Create a test suite for HTTP testing",
 		}, runner.CreateTestSuite)
-
 		mcp.AddTool(server, &mcp.Tool{
 			Name:        "create-test-case",
 			Description: "Create a test case for HTTP testing",

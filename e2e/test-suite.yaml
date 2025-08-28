@@ -1,0 +1,45 @@
+#!api-testing
+# yaml-language-server: $schema=https://linuxsuren.github.io/api-testing/api-testing-schema.json
+name: atest
+api: |
+  {{default "http://localhost:8080" (env "SERVER")}}/api/v1
+param:
+  server: |
+    {{default "http://localhost:8080" (env "SERVER")}}
+items:
+- name: CreateStore
+  before:
+    items:
+      - httpReady("{{.param.server}}/healthz", 2400)
+  request:
+    api: /stores
+    method: POST
+    body: |
+      {
+        "name": "{{.param.store}}",
+        "url": "{{env "target"}}",
+        "username": "{{default "root" (env "username")}}",
+        "password": "{{default "root" (env "password")}}",
+        "kind": {
+          "name": "atest-store-{{env "kind"}}"
+        },
+        "properties": [{
+          "key": "driver",
+          "value": "{{default "mysql" (env "driver")}}"
+        }, {
+          "key": "database",
+          "value": "{{default "atest" (env "dbname")}}"
+        }, {
+          "key": "bucket",
+          "value": "bucket"
+        }, {
+          "key": "region",
+          "value": "cn"
+        }, {
+          "key": "disablessl",
+          "value": "true"
+        }, {
+          "key": "targetPath",
+          "value": "api-testing"
+        }]
+      }

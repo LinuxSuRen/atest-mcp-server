@@ -1,0 +1,17 @@
+version: '3.1'
+services:
+  testing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      extension:
+        condition: service_started
+  extension:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - "GO_BUILDER=ghcr.io/linuxsuren/library/golang:1.22"
+        - "BASE_IMAGE=ghcr.io/linuxsuren/library/alpine:3.12"
+        - GOPROXY=${GOPROXY}

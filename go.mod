@@ -1,6 +1,6 @@
 module github.com/linuxsuren/atest-mcp-server
 
-go 1.24.4
+go 1.24.3
 
 require (
 	github.com/modelcontextprotocol/go-sdk v0.3.0

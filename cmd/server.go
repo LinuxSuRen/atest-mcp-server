@@ -123,6 +123,38 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 			Name:        "create-test-case",
 			Description: "Create a test case for HTTP testing",
 		}, runner.CreateTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-test-suite",
+			Description: "Get a test suite for HTTP testing",
+		}, runner.GetTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete-test-suite",
+			Description: "Delete a test suite for HTTP testing",
+		}, runner.DeleteTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "list-test-case",
+			Description: "List all test cases",
+		}, runner.ListTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-test-case",
+			Description: "Get a test case for HTTP testing",
+		}, runner.GetTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "run-test-case",
+			Description: "Run a test case",
+		}, runner.RunTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "update-test-suite",
+			Description: "Update a test suite for HTTP testing",
+		}, runner.UpdateTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "update-test-case",
+			Description: "Update a test case for HTTP testing",
+		}, runner.UpdateTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete-test-case",
+			Description: "Delete a test case for HTTP testing",
+		}, runner.DeleteTestCase)
 	}
 
 	handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {

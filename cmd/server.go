@@ -152,6 +152,10 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 			Description: "Update a test case for HTTP testing",
 		}, runner.UpdateTestCase)
 		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-suggested-apis",
+			Description: "Get suggested APIs from swagger for HTTP testing",
+		}, runner.GetSuggestedAPIs)
+		mcp.AddTool(server, &mcp.Tool{
 			Name:        "delete-test-case",
 			Description: "Delete a test case for HTTP testing",
 		}, runner.DeleteTestCase)

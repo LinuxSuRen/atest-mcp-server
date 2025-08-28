@@ -26,6 +26,8 @@ type Runner interface {
 		result *mcp.CallToolResult, a any, err error)
 	UpdateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (
 		result *mcp.CallToolResult, a any, err error)
+	GetSuggestedAPIs(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
+		result *mcp.CallToolResult, a any, err error)
 	DeleteTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 		result *mcp.CallToolResult, a any, err error)
 }
@@ -96,6 +98,7 @@ func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest
 type TestSuiteIndentityRequest struct {
 	Name string `json:"name" jsonschema:"the name of test suite"`
 	API  string `json:"api" jsonschema:"the API path for test suite"`
+	Kind string `json:"kind" jsonschema:"the kind of test suite, such as swagger"`
 }
 
 func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
@@ -107,7 +110,7 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 		suite := &server.TestSuiteIdentity{
 			Name: args.Name,
 			Api:  args.API,
-			Kind: "http",
+			Kind: args.Kind,
 		}
 
 		var reply *server.HelloReply
@@ -172,8 +175,8 @@ type Pair struct {
 }
 
 type APISpec struct {
-	Kind string `json:"kind" jsonschema:"the kind of API spec"`
-	Url  string `json:"url" jsonschema:"the URL of API spec"`
+	Kind string `json:"kind" jsonschema:"the kind of API spec, such as swagger"`
+	Url  string `json:"url" jsonschema:"the URL of API spec, such as http://localhost:8080/swagger.json"`
 }
 
 func (r *gRPCRunner) UpdateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteArgs) (
@@ -185,6 +188,10 @@ func (r *gRPCRunner) UpdateTestSuite(ctx context.Context, request *mcp.CallToolR
 		suite := &server.TestSuite{
 			Name: args.Name,
 			Api:  args.API,
+			Spec: &server.APISpec{
+				Kind: args.Spec.Kind,
+				Url:  args.Spec.Url,
+			},
 		}
 
 		var reply *server.HelloReply
@@ -359,6 +366,30 @@ func (r *gRPCRunner) UpdateTestCase(ctx context.Context, request *mcp.CallToolRe
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
 					&mcp.TextContent{Text: reply.Message},
+				},
+			}
+		}
+	}
+	return
+}
+
+func (r *gRPCRunner) GetSuggestedAPIs(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
+	result *mcp.CallToolResult, a any, err error) {
+	var conn *grpc.ClientConn
+	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+		runner := server.NewRunnerClient(conn)
+
+		suite := &server.TestSuiteIdentity{
+			Name: args.Name,
+			Api:  args.API,
+		}
+
+		var reply *server.TestCases
+		reply, err = runner.GetSuggestedAPIs(ctx, suite)
+		if err == nil {
+			result = &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: reply.String()},
 				},
 			}
 		}

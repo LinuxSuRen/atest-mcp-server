@@ -1,4 +1,4 @@
-ARG GO_BUILDER=docker.io/library/golang:1.22
+ARG GO_BUILDER=docker.io/library/golang:1.24
 ARG BASE_IMAGE=docker.io/library/alpine:3.12
 
 FROM ${GO_BUILDER} AS builder

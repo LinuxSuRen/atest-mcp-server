@@ -3,12 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/linuxsuren/api-testing/docs"
 	"github.com/linuxsuren/api-testing/pkg/mock"
 	"github.com/linuxsuren/atest-mcp-server/pkg"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/spf13/cobra"
-	"net/http"
 )
 
 type serverOption struct {
@@ -105,15 +106,59 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 
 	if o.runnerAddress != "" {
 		runner := pkg.NewRunner(o.runnerAddress)
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "run",
+			Description: "Run a test case",
+		}, runner.Run)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-suites",
+			Description: "Get all test suites",
+		}, runner.GetSuites)
 		mcp.AddTool(server, &mcp.Tool{
 			Name:        "create-test-suite",
 			Description: "Create a test suite for HTTP testing",
 		}, runner.CreateTestSuite)
-
 		mcp.AddTool(server, &mcp.Tool{
 			Name:        "create-test-case",
 			Description: "Create a test case for HTTP testing",
 		}, runner.CreateTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-test-suite",
+			Description: "Get a test suite for HTTP testing",
+		}, runner.GetTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete-test-suite",
+			Description: "Delete a test suite for HTTP testing",
+		}, runner.DeleteTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "list-test-case",
+			Description: "List all test cases",
+		}, runner.ListTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-test-case",
+			Description: "Get a test case for HTTP testing",
+		}, runner.GetTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "run-test-case",
+			Description: "Run a test case",
+		}, runner.RunTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "update-test-suite",
+			Description: "Update a test suite for HTTP testing",
+		}, runner.UpdateTestSuite)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "update-test-case",
+			Description: "Update a test case for HTTP testing",
+		}, runner.UpdateTestCase)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "get-suggested-apis",
+			Description: "Get suggested APIs from swagger for HTTP testing",
+		}, runner.GetSuggestedAPIs)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete-test-case",
+			Description: "Delete a test case for HTTP testing",
+		}, runner.DeleteTestCase)
 	}
 
 	handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {

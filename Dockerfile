@@ -18,5 +18,6 @@ LABEL org.opencontainers.image.source=https://github.com/LinuxSuRen/atest-ext-st
 LABEL org.opencontainers.image.description="ORM database Store Extension of the API Testing."
 
 COPY --from=builder /workspace/atest-store-mcp /usr/local/bin/atest-store-mcp
+EXPOSE 7845
 
-CMD [ "atest-store-mcp" ]
+CMD [ "atest-store-mcp", "server" ]

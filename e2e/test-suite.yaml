@@ -13,3 +13,5 @@ items:
       - httpReady("{{.param.server}}/healthz", 2400)
   request:
     api: /stores
+  expect:
+    statusCode: 500

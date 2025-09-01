@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"net/http"
 
@@ -46,6 +47,9 @@ func (o *serverOption) preRunE(c *cobra.Command, args []string) (err error) {
 	return
 }
 
+//go:embed data/mainPrompt.txt
+var mainPrompt string
+
 func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	opts := &mcp.ServerOptions{
 		Instructions:      "ATest Server",
@@ -53,8 +57,51 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	}
 
 	server := mcp.NewServer(&mcp.Implementation{
-		Name: "atest-mcp-server",
+		Name:  "atest-mcp-server",
+		Title: "api-testing (aka atest) MCP Server",
 	}, opts)
+
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "create-test-case",
+		Description: "Create a test case for HTTP testing",
+	}, func(ctx context.Context, request *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+		return &mcp.GetPromptResult{
+			Messages: []*mcp.PromptMessage{
+				{
+					Role: "user",
+					Content: &mcp.TextContent{
+						Text: mainPrompt,
+					},
+				},
+			},
+		}, nil
+	})
+	server.AddResource(&mcp.Resource{
+		Name:        "atest-knowledge",
+		Title:       "atest Knowledge",
+		Description: "The knowledge of api-tesing (aka atest)",
+		URI:         "https://linuxsuren.github.io/api-testing",
+	}, func(ctx context.Context, request *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+		return &mcp.ReadResourceResult{
+			Contents: []*mcp.ResourceContents{{
+				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/template/",
+				MIMEType: "text/html",
+				Text:     "template functions",
+			}, {
+				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/verify/",
+				MIMEType: "text/html",
+				Text:     "verify functions",
+			}, {
+				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/mock/",
+				MIMEType: "text/html",
+				Text:     "mock server introduction",
+			}, {
+				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/extension/",
+				MIMEType: "text/html",
+				Text:     "extension introduction",
+			}},
+		}, nil
+	})
 
 	mockServer := pkg.NewRemoteMockServer(o.runnerAddress)
 	mcp.AddTool(server, &mcp.Tool{

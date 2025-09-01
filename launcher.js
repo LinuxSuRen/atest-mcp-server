@@ -9,7 +9,7 @@ import { spawn } from 'child_process';
 
 const OWNER = 'LinuxSuRen';
 const REPO  = 'atest-mcp-server';
-const CACHE_DIR = join(homedir(), '.config', 'bin');
+const CACHE_DIR = join(homedir(), '.config', 'atest', 'bin');
 const BIN_PATH  = join(CACHE_DIR, 'atest-store-mcp');
 
 (async () => {

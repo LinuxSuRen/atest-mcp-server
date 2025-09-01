@@ -6,6 +6,7 @@ pkg/
 go.mod
 go.sum
 Dockerfile
+node_modules/
 main.go
 Makefile
 .goreleaser.yml

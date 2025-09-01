@@ -1,6 +1,6 @@
 {
   "name": "atest-mcp-server-launcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Auto-download & launch https://github.com/LinuxSuRen/atest-mcp-server",
   "bin": {
     "atest-mcp-server": "./launcher.js"
@@ -9,6 +9,7 @@
   "engines": {
     "node": ">=18"
   },
+  "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2",
     "tar": "^6.2.1"

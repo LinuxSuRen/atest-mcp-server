@@ -14,6 +14,12 @@ or start in Docker
 docker run -p 7845:7845 ghcr.io/linuxsuren/atest-mcp-server --runner-address 127.0.0.1:64385
 ```
 
+or start in npx
+
+```shell
+npx atest-mcp-server-launcher@latest server --mode=stdio --runner-address=localhost:64385
+```
+
 You can also set the MCP server mode with the `--mode` flag.
 
 ```shell

@@ -14,6 +14,7 @@ import (
 type serverOption struct {
 	port          int
 	runnerAddress string
+	mode          string
 
 	mockServer mock.DynamicServer
 }
@@ -28,6 +29,7 @@ func newServerCommand() *cobra.Command {
 	}
 	cmd.Flags().IntVarP(&opt.port, "port", "p", 7845, "The port to run server")
 	cmd.Flags().StringVarP(&opt.runnerAddress, "runner-address", "", "", "The address of the runner")
+	cmd.Flags().StringVarP(&opt.mode, "mode", "m", "http", "The mode: http, stdio or sse")
 	return cmd
 }
 
@@ -118,11 +120,24 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 		Description: "Delete a test case for HTTP testing",
 	}, runner.DeleteTestCase)
 
-	handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
-		return server
-	}, nil)
-	c.Println("Starting server on port: ", o.port)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
+	switch o.mode {
+	case "sse":
+		handler := mcp.NewSSEHandler(func(request *http.Request) *mcp.Server {
+			return server
+		})
+		c.Println("Starting SSE server on port:", o.port)
+		err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
+	case "stdio":
+		err = server.Run(c.Context(), &mcp.StdioTransport{})
+	case "http":
+		fallthrough
+	default:
+		handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
+			return server
+		}, nil)
+		c.Println("Starting HTTP server on port:", o.port)
+		err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
+	}
 	return
 }
 

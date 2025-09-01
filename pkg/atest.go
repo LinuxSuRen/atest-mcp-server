@@ -118,6 +118,16 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 		if err == nil {
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
+					&mcp.TextContent{Text: "success"},
+				},
+			}
+		} else {
+			if reply == nil {
+				reply = &server.HelloReply{}
+			}
+			result = &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: err.Error()},
 					&mcp.TextContent{Text: reply.Message},
 				},
 			}
@@ -127,13 +137,19 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 }
 
 type CreateTestCaseRequest struct {
-	SuiteName   string            `json:"suiteName" jsonschema:"the name of test suite"`
-	CaseName    string            `json:"caseName" jsonschema:"the name of test case"`
-	API         string            `json:"api" jsonschema:"the API path for test case"`
-	Method      string            `json:"method" jsonschema:"the HTTP method for test case"`
-	Body        string            `json:"body" jsonschema:"the body for test case"`
-	Headers     map[string]string `json:"headers" jsonschema:"the headers for test case"`
-	QueryParams map[string]string `json:"queryParams" jsonschema:"the query params for test case"`
+	SuiteName     string            `json:"suiteName" jsonschema:"the name of test suite"`
+	CaseName      string            `json:"caseName" jsonschema:"the name of test case"`
+	API           string            `json:"api" jsonschema:"the API path for test case"`
+	Method        string            `json:"method" jsonschema:"the HTTP method for test case"`
+	Body          string            `json:"body" jsonschema:"HTTP request payload body for test case"`
+	Headers       map[string]string `json:"headers" jsonschema:"HTTP request headers for test case"`
+	QueryParams   map[string]string `json:"queryParams" jsonschema:"HTTP request query params for test case"`
+	Cookies       map[string]string `json:"cookies" jsonschema:"HTTP request cookies for test case"`
+	FormParams    map[string]string `json:"formParams" jsonschema:"HTTP request form params for test case"`
+	ExpectStatus  int32             `json:"expectStatus" jsonschema:"the expected HTTP status code for the HTTP response, such as 200"`
+	ExpectBody    string            `json:"expectBody" jsonschema:"the expected HTTP response body for test case"`
+	ExpectHeaders map[string]string `json:"expectHeaders" jsonschema:"the expected HTTP response headers for test case"`
+	ExpectSchema  string            `json:"expectSchema" jsonschema:"the expected HTTP response to verify as JSON schema for test case"`
 }
 
 func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
@@ -324,6 +340,16 @@ func (r *gRPCRunner) CreateTestCase(ctx context.Context, request *mcp.CallToolRe
 					Api:    args.API,
 					Method: args.Method,
 					Body:   args.Body,
+					Header: convertMapToPairs(args.Headers),
+					Query:  convertMapToPairs(args.QueryParams),
+					Cookie: convertMapToPairs(args.Cookies),
+					Form:   convertMapToPairs(args.FormParams),
+				},
+				Response: &server.Response{
+					Body:       args.ExpectBody,
+					StatusCode: args.ExpectStatus,
+					Header:     convertMapToPairs(args.ExpectHeaders),
+					Schema:     args.ExpectSchema,
 				},
 			},
 		}
@@ -339,6 +365,17 @@ func (r *gRPCRunner) CreateTestCase(ctx context.Context, request *mcp.CallToolRe
 		}
 	}
 	return
+}
+
+func convertMapToPairs(data map[string]string) []*server.Pair {
+	pairs := make([]*server.Pair, 0, len(data))
+	for k, v := range data {
+		pairs = append(pairs, &server.Pair{
+			Key:   k,
+			Value: v,
+		})
+	}
+	return pairs
 }
 
 func (r *gRPCRunner) UpdateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (

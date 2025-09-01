@@ -8,6 +8,12 @@ Please start the MCP server with [atest](https://github.com/linuxsuren/api-testi
 atest-store-mcp server --runner-address 127.0.0.1:64385
 ```
 
+You can also set the MCP server mode with the `--mode` flag.
+
+```shell
+atest-store-mcp server --runner-address 127.0.0.1:64385 --mode=[sse|stdio]
+```
+
 ## MCP Server
 
 ```json

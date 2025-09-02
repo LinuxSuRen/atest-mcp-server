@@ -4,7 +4,9 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/linuxsuren/api-testing/pkg/mock"
 	"github.com/linuxsuren/atest-mcp-server/pkg"
@@ -77,31 +79,29 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 		}, nil
 	})
 	server.AddResource(&mcp.Resource{
-		Name:        "atest-knowledge",
-		Title:       "atest Knowledge",
-		Description: "The knowledge of api-tesing (aka atest)",
-		URI:         "https://linuxsuren.github.io/api-testing",
-	}, func(ctx context.Context, request *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
-		return &mcp.ReadResourceResult{
-			Contents: []*mcp.ResourceContents{{
-				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/template/",
-				MIMEType: "text/html",
-				Text:     "template functions",
-			}, {
-				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/verify/",
-				MIMEType: "text/html",
-				Text:     "verify functions",
-			}, {
-				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/mock/",
-				MIMEType: "text/html",
-				Text:     "mock server introduction",
-			}, {
-				URI:      "https://linuxsuren.github.io/api-testing/latest/tasks/extension/",
-				MIMEType: "text/html",
-				Text:     "extension introduction",
-			}},
-		}, nil
-	})
+		Name:        "atest-knowledge-mock-server",
+		Description: "The knowledge of api-tesing (aka atest) mock server",
+		MIMEType:    "text/markdown",
+		URI:         "file:mock.md",
+	}, remoteResource)
+	server.AddResource(&mcp.Resource{
+		Name:        "atest-knowledge-template-functions",
+		Description: "The knowledge of api-tesing (aka atest) template functions",
+		MIMEType:    "text/markdown",
+		URI:         "file:template.md",
+	}, remoteResource)
+	server.AddResource(&mcp.Resource{
+		Name:        "atest-knowledge-verify-functions",
+		Description: "The knowledge of api-tesing (aka atest) verify functions",
+		MIMEType:    "text/markdown",
+		URI:         "file:verify.md",
+	}, remoteResource)
+	server.AddResource(&mcp.Resource{
+		Name:        "readme",
+		Description: "This is a description of atest and atest MCP server.",
+		MIMEType:    "text/plain",
+		URI:         "embedded:info",
+	}, embeddedResource)
 
 	mockServer := pkg.NewRemoteMockServer(o.runnerAddress)
 	mcp.AddTool(server, &mcp.Tool{
@@ -128,7 +128,8 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	}, runner.CreateTestSuite)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create-test-case",
-		Description: "Create a test case for HTTP testing",
+		Title:       "Create a test case",
+		Description: "Create a test case for HTTP testing. Prefer to use expectStatus, expectSchema, and expectHeaders.",
 	}, runner.CreateTestCase)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get-test-suite",
@@ -186,6 +187,60 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 		err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
 	}
 	return
+}
+
+var embeddedResources = map[string]string{
+	"info": mainPrompt,
+}
+
+func embeddedResource(_ context.Context, req *mcp.ReadResourceRequest) (*mcp.ReadResourceResult, error) {
+	u, err := url.Parse(req.Params.URI)
+	if err != nil {
+		return nil, err
+	}
+	if u.Scheme != "embedded" {
+		return nil, fmt.Errorf("wrong scheme: %q", u.Scheme)
+	}
+	key := u.Opaque
+	text, ok := embeddedResources[key]
+	if !ok {
+		return nil, fmt.Errorf("no embedded resource named %q", key)
+	}
+	return &mcp.ReadResourceResult{
+		Contents: []*mcp.ResourceContents{
+			{URI: req.Params.URI, MIMEType: "text/plain", Text: text},
+		},
+	}, nil
+}
+
+func remoteResource(_ context.Context, req *mcp.ReadResourceRequest) (result *mcp.ReadResourceResult, err error) {
+	u, err := url.Parse(req.Params.URI)
+	if err != nil {
+		return nil, err
+	}
+	if u.Scheme != "file" {
+		return nil, fmt.Errorf("wrong scheme: %q", u.Scheme)
+	}
+
+	remoteResourceURL := fmt.Sprintf("https://raw.githubusercontent.com/LinuxSuRen/api-testing/refs/heads/master/docs/site/content/zh/latest/tasks/%s",
+		u.Path)
+
+	var resp *http.Response
+	if resp, err = http.Get(remoteResourceURL); err == nil && resp.StatusCode == http.StatusOK {
+		var data []byte
+		if data, err = io.ReadAll(resp.Body); err == nil {
+			return &mcp.ReadResourceResult{
+				Contents: []*mcp.ResourceContents{
+					{URI: req.Params.URI, MIMEType: "text/markdown", Text: string(data)},
+				},
+			}, nil
+		}
+	}
+	return &mcp.ReadResourceResult{
+		Contents: []*mcp.ResourceContents{
+			{URI: req.Params.URI, MIMEType: "text/text", Text: fmt.Sprintf("not found: %s", req.Params.URI)},
+		},
+	}, err
 }
 
 func complete(ctx context.Context, req *mcp.CompleteRequest) (*mcp.CompleteResult, error) {

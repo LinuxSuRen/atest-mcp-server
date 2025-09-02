@@ -3,6 +3,8 @@ fmt:
 	go fmt ./...
 build:
 	go build -o bin/atest-store-mcp .
+build-win:
+	GOOS=windows go build -o bin/atest-store-mcp.exe .
 cp: build
 	cp bin/atest-store-mcp ~/.config/atest/bin/
 test:

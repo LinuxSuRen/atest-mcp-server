@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/linuxsuren/api-testing/pkg/mock"
 	"github.com/linuxsuren/atest-mcp-server/pkg"
@@ -222,8 +223,9 @@ func remoteResource(_ context.Context, req *mcp.ReadResourceRequest) (result *mc
 		return nil, fmt.Errorf("wrong scheme: %q", u.Scheme)
 	}
 
+	filePath := strings.TrimPrefix(req.Params.URI, "file:")
 	remoteResourceURL := fmt.Sprintf("https://raw.githubusercontent.com/LinuxSuRen/api-testing/refs/heads/master/docs/site/content/zh/latest/tasks/%s",
-		u.Path)
+		filePath)
 
 	var resp *http.Response
 	if resp, err = http.Get(remoteResourceURL); err == nil && resp.StatusCode == http.StatusOK {
@@ -238,7 +240,7 @@ func remoteResource(_ context.Context, req *mcp.ReadResourceRequest) (result *mc
 	}
 	return &mcp.ReadResourceResult{
 		Contents: []*mcp.ResourceContents{
-			{URI: req.Params.URI, MIMEType: "text/text", Text: fmt.Sprintf("not found: %s", req.Params.URI)},
+			{URI: req.Params.URI, MIMEType: "text/plain", Text: fmt.Sprintf("not found: %s from %s", filePath, remoteResourceURL)},
 		},
 	}, err
 }

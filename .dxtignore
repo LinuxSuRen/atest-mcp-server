@@ -1,0 +1,14 @@
+.github/
+bin/
+cmd/
+e2e/
+node_modules/
+pkg/
+.gitignore
+.goreleaser.yaml
+.npmignore
+Dockerfile
+go.mod
+go.sum
+main.go
+Makefile

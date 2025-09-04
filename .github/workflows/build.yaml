@@ -24,6 +24,15 @@ jobs:
         with:
           go-version: 1.22.x
       - uses: actions/checkout@v3.0.0
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          cache: "npm"
+      - name: Build dxt package
+        run: |
+          npm install -g @anthropic-ai/dxt
+          dxt pack
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:

@@ -1,0 +1,24 @@
+{
+  "dxt_version": "0.1",
+  "name": "atest-mcp-server-launcher",
+  "version": "1.0.1",
+  "description": "Auto-download & launch https://github.com/LinuxSuRen/atest-mcp-server",
+  "author": {
+    "name": "linuxsuren"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "launcher.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/launcher.js"
+      ],
+      "env": {}
+    }
+  },
+  "keywords": [
+    "atest"
+  ],
+  "license": "MIT"
+}

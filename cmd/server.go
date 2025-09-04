@@ -169,6 +169,12 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 		Description: "Delete a test case for HTTP testing",
 	}, runner.DeleteTestCase)
 
+	started := pkg.NewStarter()
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "start-atest-desktop",
+		Description: "Start atest desktop application",
+	}, started.Start)
+
 	switch o.mode {
 	case "sse":
 		handler := mcp.NewSSEHandler(func(request *http.Request) *mcp.Server {

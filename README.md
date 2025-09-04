@@ -42,3 +42,23 @@ atest-store-mcp server --runner-address 127.0.0.1:64385 --mode=[sse|stdio]
   }
 }
 ```
+
+or as stdio mode:
+```json
+{
+  "mcpServers": {
+    "atest": {
+      "name": "atest-mcp-stdio",
+      "type": "stdio",
+      "description": "",
+      "isActive": true,
+      "command": "atest-store-mcp",
+      "args": [
+        "server",
+        "-m=stdio",
+        "--runner-address=localhost:64385"
+      ]
+    }
+  }
+}
+```

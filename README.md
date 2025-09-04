@@ -62,3 +62,16 @@ or as stdio mode:
   }
 }
 ```
+
+## How to build
+
+You can build the binary with the following command:
+```shell
+make build
+```
+
+You can build `.dxt` package with the following command:
+```shell
+npm install -g @anthropic-ai/dxt
+dxt pack
+```

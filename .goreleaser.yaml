@@ -28,6 +28,9 @@ archives:
         format: zip
     files:
       - README.md
+  - files:
+      - atest-mcp-server.dxt
+    id: dxt
 checksum:
   name_template: 'checksums.txt'
 snapshot:

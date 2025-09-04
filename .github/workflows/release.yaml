@@ -45,6 +45,15 @@ jobs:
         run: |
           docker login --username linuxsuren --password ${{secrets.DOCKER_HUB_PUBLISH_SECRETS}}
           docker login ${{ env.REGISTRY }}/linuxsuren --username linuxsuren --password ${{secrets.GH_PUBLISH_SECRETS}}
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          cache: "npm"
+      - name: Build dxt package
+        run: |
+          npm install -g @anthropic-ai/dxt
+          dxt pack
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.LinuxSuRen/atest-mcp-server",
+  "description": "Auto-download \u0026 launch https://github.com/LinuxSuRen/atest-mcp-server",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/LinuxSuRen/atest-mcp-server",
+    "source": "github"
+  },
+  "version": "1.0.2",
+  "packages": [
+    {
+      "registry_type": "npm",
+      "registry_base_url": "https://registry.npmjs.org",
+      "identifier": "atest-mcp-server-launcher",
+      "version": "1.0.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

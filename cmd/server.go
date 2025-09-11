@@ -125,7 +125,7 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	}, runner.GetSuites)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create-test-suite",
-		Description: "Create a test suite for HTTP testing. Test suite is a collection of test cases.",
+		Description: "Create a test suite for HTTP testing. Test suite is a collection of test cases. Should put similar test cases into one suite.",
 	}, runner.CreateTestSuite)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create-test-case",

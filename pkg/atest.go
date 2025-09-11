@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/linuxsuren/api-testing/pkg/server"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
@@ -13,7 +14,7 @@ type Runner interface {
 	GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (result *mcp.CallToolResult, a any, err error)
 	CreateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (*mcp.CallToolResult, any, error)
 	CreateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (*mcp.CallToolResult, any, error)
-	GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (result *mcp.CallToolResult, a any, err error)
+	GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args GetTestSuiteRequest) (result *mcp.CallToolResult, a any, err error)
 	UpdateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteArgs) (
 		result *mcp.CallToolResult, a any, err error)
 	ListTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
@@ -96,9 +97,9 @@ func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest
 }
 
 type TestSuiteIndentityRequest struct {
-	Name string `json:"name" jsonschema:"the name of test suite" mcp:"the name of test suite"`
-	API  string `json:"api" jsonschema:"the API path for test suite" mcp:"the API path for test suite"`
-	Kind string `json:"kind" jsonschema:"the kind of test suite, such as swagger" mcp:"the kind of test suite, such as swagger"`
+	Name string `json:"name" jsonschema:"the name of test suite"`
+	API  string `json:"api" jsonschema:"the API path for test suite, such as http://localhost:8080/"`
+	Kind string `json:"kind" jsonschema:"the kind of test suite, such as swagger"`
 }
 
 func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
@@ -137,22 +138,26 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 }
 
 type CreateTestCaseRequest struct {
-	SuiteName     string            `json:"suiteName" jsonschema:"the name of test suite" mcp:"the name of test suite"`
-	CaseName      string            `json:"caseName" jsonschema:"the name of test case" mcp:"the name of test case"`
-	API           string            `json:"api" jsonschema:"the API path for test case" mcp:"the API path for test case"`
-	Method        string            `json:"method" jsonschema:"the HTTP method for test case" mcp:"the HTTP method for test case"`
-	Body          string            `json:"body" jsonschema:"HTTP request payload body for test case" mcp:"HTTP request payload body for test case"`
-	Headers       map[string]string `json:"headers" jsonschema:"HTTP request headers for test case" mcp:"HTTP request headers for test case"`
-	QueryParams   map[string]string `json:"queryParams" jsonschema:"HTTP request query params for test case" mcp:"HTTP request query params for test case"`
-	Cookies       map[string]string `json:"cookies" jsonschema:"HTTP request cookies for test case" mcp:"HTTP request cookies for test case"`
-	FormParams    map[string]string `json:"formParams" jsonschema:"HTTP request form params for test case" mcp:"HTTP request form params for test case"`
-	ExpectStatus  int32             `json:"expectStatus" jsonschema:"the expected HTTP status code for the HTTP response, such as 200" mcp:"the expected HTTP status code for the HTTP response, such as 200" mcp:"the expected HTTP status code for the HTTP response, such as 200"`
-	ExpectBody    string            `json:"expectBody" jsonschema:"the expected HTTP response body for test case" mcp:"the expected HTTP response body for test case"`
-	ExpectHeaders map[string]string `json:"expectHeaders" jsonschema:"the expected HTTP response headers for test case" mcp:"the expected HTTP response headers for test case"`
-	ExpectSchema  string            `json:"expectSchema" jsonschema:"the expected HTTP response to verify as JSON schema for test case" mcp:"the expected HTTP response to verify as JSON schema for test case"`
+	SuiteName     string            `json:"suiteName" jsonschema:"the name of test suite"`
+	CaseName      string            `json:"caseName" jsonschema:"the name of test case"`
+	API           string            `json:"api" jsonschema:"the API path for test case, such as /api/v1/users"`
+	Method        string            `json:"method" jsonschema:"the HTTP method for test case"`
+	Body          string            `json:"body" jsonschema:"HTTP request payload body for test case"`
+	Headers       map[string]string `json:"headers,omitempty" jsonschema:"HTTP request headers for test case"`
+	QueryParams   map[string]string `json:"queryParams,omitempty" jsonschema:"HTTP request query params for test case"`
+	Cookies       map[string]string `json:"cookies,omitempty" jsonschema:"HTTP request cookies for test case"`
+	FormParams    map[string]string `json:"formParams,omitempty" jsonschema:"HTTP request form params for test case"`
+	ExpectStatus  int32             `json:"expectStatus" jsonschema:"the expected HTTP status code for the HTTP response, such as 200"`
+	ExpectBody    string            `json:"expectBody,omitempty" jsonschema:"the expected HTTP response body for test case"`
+	ExpectHeaders map[string]string `json:"expectHeaders,omitempty" jsonschema:"the expected HTTP response headers for test case"`
+	ExpectSchema  string            `json:"expectSchema,omitempty" jsonschema:"the expected HTTP response to verify as JSON schema for test case"`
 }
 
-func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
+type GetTestSuiteRequest struct {
+	Name string `json:"name" jsonschema:"the name of test suite"`
+}
+
+func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args GetTestSuiteRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
 	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
@@ -160,8 +165,6 @@ func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequ
 
 		suite := &server.TestSuiteIdentity{
 			Name: args.Name,
-			Api:  args.API,
-			Kind: "http",
 		}
 
 		var reply *server.TestSuite

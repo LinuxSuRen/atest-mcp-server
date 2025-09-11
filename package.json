@@ -1,6 +1,6 @@
 {
   "name": "atest-mcp-server-launcher",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Auto-download & launch https://github.com/LinuxSuRen/atest-mcp-server",
   "bin": {
     "atest-mcp-server": "./launcher.js"
@@ -12,8 +12,10 @@
   "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2",
-    "tar": "^6.2.1"
+    "tar": "^6.2.1",
+    "unzipper": "^0.10.14"
   },
+  "mcpName": "io.github.LinuxSuRen/atest-mcp-server",
   "keywords": ["mcp", "server", "npx"],
   "license": "MIT"
 }

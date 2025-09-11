@@ -75,3 +75,16 @@ You can build `.dxt` package with the following command:
 npm install -g @anthropic-ai/dxt
 dxt pack
 ```
+
+## How to publish
+
+You can publish the package with the following command:
+```shell
+npm login --registry https://registry.npmjs.com
+npm publish --registry https://registry.npmjs.com
+
+mcp-publisher login github
+mcp-publisher publish
+```
+
+> read more about [mcp-publisher](https://github.com/modelcontextprotocol/registry/blob/main/docs/guides/publishing/publish-server.md)

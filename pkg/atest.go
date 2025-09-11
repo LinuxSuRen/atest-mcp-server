@@ -3,7 +3,8 @@ package pkg
 import (
 	"context"
 	"encoding/json"
-
+	"fmt"
+	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/linuxsuren/api-testing/pkg/server"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
@@ -11,14 +12,15 @@ import (
 
 type Runner interface {
 	Run(ctx context.Context, request *mcp.CallToolRequest, args RunRequest) (result *mcp.CallToolResult, a any, err error)
-	GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (result *mcp.CallToolResult, a any, err error)
+	GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (
+		result *mcp.CallToolResult, data map[string]*server.Items, err error)
 	CreateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (*mcp.CallToolResult, any, error)
 	CreateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (*mcp.CallToolResult, any, error)
 	GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args GetTestSuiteRequest) (result *mcp.CallToolResult, a any, err error)
 	UpdateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteArgs) (
 		result *mcp.CallToolResult, a any, err error)
 	ListTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
-		result *mcp.CallToolResult, a any, err error)
+		result *mcp.CallToolResult, data TestCases, err error)
 	RunTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 		result *mcp.CallToolResult, a any, err error)
 	GetTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
@@ -31,6 +33,10 @@ type Runner interface {
 		result *mcp.CallToolResult, a any, err error)
 	DeleteTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 		result *mcp.CallToolResult, a any, err error)
+}
+
+type TestCases struct {
+	Data []*server.TestCase `json:"data"`
 }
 
 type gRPCRunner struct {
@@ -64,6 +70,7 @@ func (r *gRPCRunner) Run(ctx context.Context, request *mcp.CallToolRequest, args
 
 			dataAsStr, _ := json.Marshal(data)
 
+			a = data
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
 					&mcp.TextContent{Text: string(dataAsStr)},
@@ -74,7 +81,8 @@ func (r *gRPCRunner) Run(ctx context.Context, request *mcp.CallToolRequest, args
 	return
 }
 
-func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (result *mcp.CallToolResult, a any, err error) {
+func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (
+	result *mcp.CallToolResult, data map[string]*server.Items, err error) {
 	var conn *grpc.ClientConn
 	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
 		runner := server.NewRunnerClient(conn)
@@ -82,18 +90,30 @@ func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest
 		var reply *server.Suites
 		reply, err = runner.GetSuites(ctx, &server.Empty{})
 		if err == nil {
-			data := reply.Data
-
-			dataAsStr, _ := json.Marshal(data)
-
+			data = reply.Data
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
-					&mcp.TextContent{Text: string(dataAsStr)},
+					&mcp.TextContent{Text: objectToJSON(data)},
+				},
+			}
+		} else {
+			result = &mcp.CallToolResult{
+				Content: []mcp.Content{
+					&mcp.TextContent{Text: "get suites failed"},
+					&mcp.TextContent{Text: err.Error()},
 				},
 			}
 		}
 	}
 	return
+}
+
+func objectToJSON(obj any) string {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }
 
 type TestSuiteIndentityRequest struct {
@@ -108,6 +128,36 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
 		runner := server.NewRunnerClient(conn)
 
+		if request.Session.InitializeParams().Capabilities.Elicitation != nil && args.Name == "" {
+			var elicitResult *mcp.ElicitResult
+			if elicitResult, err = request.Session.Elicit(ctx, &mcp.ElicitParams{
+				Message: "Please input the name of test suite",
+				RequestedSchema: &jsonschema.Schema{
+					Type: "object",
+					Properties: map[string]*jsonschema.Schema{
+						"name": {
+							Type: "string",
+						},
+					},
+					Required: []string{"name"},
+				},
+			}); err == nil && elicitResult.Content != nil {
+				args.Name = elicitResult.Content["name"].(string)
+			} else if err != nil {
+				request.Session.Log(ctx, &mcp.LoggingMessageParams{
+					Data: "get elicit failed",
+				})
+
+				result = &mcp.CallToolResult{
+					Content: []mcp.Content{
+						&mcp.TextContent{Text: "get elicit failed"},
+						&mcp.TextContent{Text: err.Error()},
+					},
+				}
+				return
+			}
+		}
+
 		suite := &server.TestSuiteIdentity{
 			Name: args.Name,
 			Api:  args.API,
@@ -119,7 +169,7 @@ func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolR
 		if err == nil {
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
-					&mcp.TextContent{Text: "success"},
+					&mcp.TextContent{Text: "created test suite success"},
 				},
 			}
 		} else {
@@ -170,6 +220,7 @@ func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequ
 		var reply *server.TestSuite
 		reply, err = runner.GetTestSuite(ctx, suite)
 		if err == nil {
+			a = reply
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
 					&mcp.TextContent{Text: reply.String()},
@@ -251,7 +302,7 @@ func (r *gRPCRunner) DeleteTestSuite(ctx context.Context, request *mcp.CallToolR
 }
 
 func (r *gRPCRunner) ListTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
-	result *mcp.CallToolResult, a any, err error) {
+	result *mcp.CallToolResult, data TestCases, err error) {
 	var conn *grpc.ClientConn
 	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
 		runner := server.NewRunnerClient(conn)
@@ -261,9 +312,18 @@ func (r *gRPCRunner) ListTestCase(ctx context.Context, request *mcp.CallToolRequ
 			Api:  args.API,
 		}
 
+		request.Session.Log(ctx, &mcp.LoggingMessageParams{
+			Data:   fmt.Sprintf("list test cases from suite: %q", suite.String()),
+			Level:  "debug",
+			Logger: "runner",
+		})
+
 		var reply *server.Suite
 		reply, err = runner.ListTestCase(ctx, suite)
 		if err == nil {
+			data = TestCases{
+				Data: reply.Items,
+			}
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
 					&mcp.TextContent{Text: reply.String()},

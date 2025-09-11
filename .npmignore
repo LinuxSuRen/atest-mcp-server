@@ -9,4 +9,9 @@ Dockerfile
 node_modules/
 main.go
 Makefile
-.goreleaser.yml
+.goreleaser.yaml
+.idea/
+.dxtignore
+.mcpregistry_github_token
+.mcpregistry_registry_token
+atest-mcp-server.dxt

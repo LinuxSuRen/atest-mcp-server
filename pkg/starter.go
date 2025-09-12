@@ -26,7 +26,7 @@ func (s *starter) Start(ctx context.Context, request *mcp.CallToolRequest, args 
 	var startErr error
 	switch runtime.GOOS {
 	case "windows":
-		startErr = exec.Command("cmd", "/C", "start atest-desktop").Run()
+		startErr = exec.Command("cmd", "/C", "start atest-desktop.exe").Run()
 	case "darwin":
 		startErr = exec.Command("open", "-a", "atest-desktop").Run()
 	case "linux":

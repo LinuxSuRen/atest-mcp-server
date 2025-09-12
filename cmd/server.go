@@ -33,7 +33,7 @@ func newServerCommand() *cobra.Command {
 	}
 	cmd.Flags().IntVarP(&opt.port, "port", "p", 7845, "The port to run server")
 	cmd.Flags().StringVarP(&opt.runnerAddress, "runner-address", "", "", "The address of the runner")
-	cmd.Flags().StringVarP(&opt.mode, "mode", "m", "http", "The mode: http, stdio or sse")
+	cmd.Flags().StringVarP(&opt.mode, "mode", "m", "stdio", "The mode: http, stdio or sse")
 	return cmd
 }
 
@@ -122,10 +122,13 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get-suites",
 		Description: "Get all test suites",
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint: true,
+		},
 	}, runner.GetSuites)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create-test-suite",
-		Description: "Create a test suite for HTTP testing. Test suite is a collection of test cases. Should put similar test cases into one suite.",
+		Description: "Create a test suite for HTTP testing. Test suite is a collection of test cases. Check if there is a similar test suite already exists. Avoid always create new test suite.",
 	}, runner.CreateTestSuite)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "create-test-case",
@@ -135,18 +138,30 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get-test-suite",
 		Description: "Get a test suite for HTTP testing",
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint: true,
+		},
 	}, runner.GetTestSuite)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "delete-test-suite",
 		Description: "Delete a test suite for HTTP testing",
+		Annotations: &mcp.ToolAnnotations{
+			DestructiveHint: &DestructiveHint,
+		},
 	}, runner.DeleteTestSuite)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "list-test-case",
 		Description: "List all test cases",
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint: true,
+		},
 	}, runner.ListTestCase)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get-test-case",
 		Description: "Get a test case for HTTP testing",
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint: true,
+		},
 	}, runner.GetTestCase)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "run-test-case",
@@ -163,10 +178,16 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "get-suggested-apis",
 		Description: "Get suggested APIs from swagger for HTTP testing",
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint: true,
+		},
 	}, runner.GetSuggestedAPIs)
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "delete-test-case",
 		Description: "Delete a test case for HTTP testing",
+		Annotations: &mcp.ToolAnnotations{
+			DestructiveHint: &DestructiveHint,
+		},
 	}, runner.DeleteTestCase)
 
 	started := pkg.NewStarter()
@@ -182,19 +203,21 @@ func (o *serverOption) runE(c *cobra.Command, args []string) (err error) {
 		})
 		c.Println("Starting SSE server on port:", o.port)
 		err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
-	case "stdio":
-		err = server.Run(c.Context(), &mcp.StdioTransport{})
 	case "http":
-		fallthrough
-	default:
 		handler := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
 			return server
 		}, nil)
 		c.Println("Starting HTTP server on port:", o.port)
 		err = http.ListenAndServe(fmt.Sprintf(":%d", o.port), handler)
+	case "stdio":
+		fallthrough
+	default:
+		err = server.Run(c.Context(), &mcp.StdioTransport{})
 	}
 	return
 }
+
+var DestructiveHint = true
 
 var embeddedResources = map[string]string{
 	"info": mainPrompt,

@@ -400,6 +400,11 @@ func (r *gRPCRunner) CreateTestCase(ctx context.Context, request *mcp.CallToolRe
 	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
+		if args.SuiteName == "" || args.CaseName == "" || args.API == "" {
+			err = fmt.Errorf("case name is required")
+			return
+		}
+
 		testCase := &server.TestCaseWithSuite{
 			SuiteName: args.SuiteName,
 			Data: &server.TestCase{
@@ -428,6 +433,7 @@ func (r *gRPCRunner) CreateTestCase(ctx context.Context, request *mcp.CallToolRe
 		if err == nil {
 			result = &mcp.CallToolResult{
 				Content: []mcp.Content{
+					&mcp.TextContent{Text: fmt.Sprintf("%q created under %q successfully", args.CaseName, args.SuiteName)},
 					&mcp.TextContent{Text: reply.Message},
 				},
 			}

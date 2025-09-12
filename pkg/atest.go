@@ -8,6 +8,7 @@ import (
 	"github.com/linuxsuren/api-testing/pkg/server"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Runner interface {
@@ -49,6 +50,11 @@ func NewRunner(address string) Runner {
 	}
 }
 
+// getConnection creates a gRPC connection to the server
+func (r *gRPCRunner) getConnection() (*grpc.ClientConn, error) {
+	return grpc.NewClient(r.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+}
+
 type RunRequest struct {
 	SuiteName string `json:"suiteName" jsonschema:"the name of test suite" mcp:"the name of test suite"`
 	CaseName  string `json:"caseName" jsonschema:"the name of test case" mcp:"the name of test case"`
@@ -56,7 +62,7 @@ type RunRequest struct {
 
 func (r *gRPCRunner) Run(ctx context.Context, request *mcp.CallToolRequest, args RunRequest) (result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		runReq := &server.TestTask{
@@ -84,7 +90,7 @@ func (r *gRPCRunner) Run(ctx context.Context, request *mcp.CallToolRequest, args
 func (r *gRPCRunner) GetSuites(ctx context.Context, request *mcp.CallToolRequest, args any) (
 	result *mcp.CallToolResult, data map[string]*server.Items, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		var reply *server.Suites
@@ -125,7 +131,7 @@ type TestSuiteIndentityRequest struct {
 func (r *gRPCRunner) CreateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		if request.Session.InitializeParams().Capabilities.Elicitation != nil && args.Name == "" {
@@ -210,7 +216,7 @@ type GetTestSuiteRequest struct {
 func (r *gRPCRunner) GetTestSuite(ctx context.Context, request *mcp.CallToolRequest, args GetTestSuiteRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		suite := &server.TestSuiteIdentity{
@@ -252,7 +258,7 @@ type APISpec struct {
 func (r *gRPCRunner) UpdateTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteArgs) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		suite := &server.TestSuite{
@@ -280,7 +286,7 @@ func (r *gRPCRunner) UpdateTestSuite(ctx context.Context, request *mcp.CallToolR
 func (r *gRPCRunner) DeleteTestSuite(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		suite := &server.TestSuiteIdentity{
@@ -304,7 +310,7 @@ func (r *gRPCRunner) DeleteTestSuite(ctx context.Context, request *mcp.CallToolR
 func (r *gRPCRunner) ListTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
 	result *mcp.CallToolResult, data TestCases, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		suite := &server.TestSuiteIdentity{
@@ -343,7 +349,7 @@ type TestCaseIndentityRequest struct {
 func (r *gRPCRunner) RunTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		testCase := &server.TestCaseIdentity{
@@ -367,7 +373,7 @@ func (r *gRPCRunner) RunTestCase(ctx context.Context, request *mcp.CallToolReque
 func (r *gRPCRunner) GetTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		testCase := &server.TestCaseIdentity{
@@ -391,7 +397,7 @@ func (r *gRPCRunner) GetTestCase(ctx context.Context, request *mcp.CallToolReque
 func (r *gRPCRunner) CreateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		testCase := &server.TestCaseWithSuite{
@@ -444,7 +450,7 @@ func convertMapToPairs(data map[string]string) []*server.Pair {
 func (r *gRPCRunner) UpdateTestCase(ctx context.Context, request *mcp.CallToolRequest, args CreateTestCaseRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		testCase := &server.TestCaseWithSuite{
@@ -476,7 +482,7 @@ func (r *gRPCRunner) UpdateTestCase(ctx context.Context, request *mcp.CallToolRe
 func (r *gRPCRunner) GetSuggestedAPIs(ctx context.Context, request *mcp.CallToolRequest, args TestSuiteIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		suite := &server.TestSuiteIdentity{
@@ -500,7 +506,7 @@ func (r *gRPCRunner) GetSuggestedAPIs(ctx context.Context, request *mcp.CallTool
 func (r *gRPCRunner) DeleteTestCase(ctx context.Context, request *mcp.CallToolRequest, args TestCaseIndentityRequest) (
 	result *mcp.CallToolResult, a any, err error) {
 	var conn *grpc.ClientConn
-	if conn, err = grpc.Dial(r.Address, grpc.WithInsecure()); err == nil {
+	if conn, err = r.getConnection(); err == nil {
 		runner := server.NewRunnerClient(conn)
 
 		testCase := &server.TestCaseIdentity{

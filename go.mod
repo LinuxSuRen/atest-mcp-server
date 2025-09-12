@@ -3,6 +3,7 @@ module github.com/linuxsuren/atest-mcp-server
 go 1.24.3
 
 require (
+	github.com/google/jsonschema-go v0.2.0
 	github.com/linuxsuren/api-testing v0.0.20
 	github.com/modelcontextprotocol/go-sdk v0.3.0
 	github.com/spf13/cobra v1.9.1
@@ -29,7 +30,6 @@ require (
 	github.com/go-openapi/spec v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/jsonschema-go v0.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
@@ -63,6 +63,7 @@ require (
 	github.com/signintech/gopdf v0.32.0 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.70 // indirect
 	github.com/swaggest/openapi-go v0.2.50 // indirect
 	github.com/swaggest/refl v1.3.0 // indirect

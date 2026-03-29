@@ -88,3 +88,8 @@ mcp-publisher publish
 ```
 
 > read more about [mcp-publisher](https://github.com/modelcontextprotocol/registry/blob/main/docs/guides/publishing/publish-server.md)
+
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/linuxsuren-atest-mcp-server).
+
